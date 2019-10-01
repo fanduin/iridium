@@ -5,4 +5,4 @@ authors = ["Cian Nugent McGealy <cnugentmcgealy@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-nom = "5.0.0"
+nom = "^4.0.0"

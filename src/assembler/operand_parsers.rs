@@ -1,3 +1,8 @@
+use nom::types::CompleteStr;
+use nom::digit;
+
+use crate::assembler::Token;
+
 named!(integer_operand<CompleteStr, Token>,
     ws!(
         do_parse!(
@@ -11,6 +16,8 @@ named!(integer_operand<CompleteStr, Token>,
 );
 
 mod tests {
+    use super::*;
+
     #[test]
     fn test_parser_integer_operand() {
         let result = integer_operand(CompleteStr("#10")); 
