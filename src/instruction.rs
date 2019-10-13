@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Opcode {
     LOAD,
     ADD,
@@ -28,7 +28,7 @@ pub struct Instruction {
 impl Instruction {
     pub fn new(opcode: Opcode) -> Instruction {
         Instruction {
-            opcode: opcode
+            opcode
         }
     }
 }
@@ -36,24 +36,24 @@ impl Instruction {
 impl From<u8> for Opcode {
     fn from(v: u8) -> Self {
         match v {
-            0  => return Opcode::LOAD,
-            1  => return Opcode::ADD,
-            2  => return Opcode::SUB,
-            3  => return Opcode::MUL,
-            4  => return Opcode::DIV,
-            5  => return Opcode::HLT,
-            6  => return Opcode::JMP,
-            7  => return Opcode::JMPF,
-            8  => return Opcode::JMPB,
-            9  => return Opcode::EQ,
-            10 => return Opcode::NEQ,
-            11 => return Opcode::GT,
-            12 => return Opcode::LT,
-            13 => return Opcode::GTQ,
-            14 => return Opcode::LTQ,
-            15 => return Opcode::JMPE,
-            16 => return Opcode::NOP,
-            _  => return Opcode::IGL,
+            0  => Opcode::LOAD,
+            1  => Opcode::ADD,
+            2  => Opcode::SUB,
+            3  => Opcode::MUL,
+            4  => Opcode::DIV,
+            5  => Opcode::HLT,
+            6  => Opcode::JMP,
+            7  => Opcode::JMPF,
+            8  => Opcode::JMPB,
+            9  => Opcode::EQ,
+            10 => Opcode::NEQ,
+            11 => Opcode::GT,
+            12 => Opcode::LT,
+            13 => Opcode::GTQ,
+            14 => Opcode::LTQ,
+            15 => Opcode::JMPE,
+            16 => Opcode::NOP,
+            _  => Opcode::IGL,
         }
     }
 }

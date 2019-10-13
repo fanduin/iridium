@@ -3,7 +3,7 @@ use nom::digit;
 
 use crate::assembler::Token;
 
-named!(register <CompleteStr, Token>,
+named!(pub register <CompleteStr, Token>,
    ws!(
         do_parse!(
             tag!("$") >>
@@ -18,6 +18,7 @@ named!(register <CompleteStr, Token>,
 );
 
 mod tests {
+    #![allow(unused_imports)]
     use super::*;
 
     #[test]

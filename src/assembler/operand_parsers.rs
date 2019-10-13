@@ -3,7 +3,7 @@ use nom::digit;
 
 use crate::assembler::Token;
 
-named!(integer_operand<CompleteStr, Token>,
+named!(pub integer_operand<CompleteStr, Token>,
     ws!(
         do_parse!(
             tag!("#") >>
@@ -16,6 +16,7 @@ named!(integer_operand<CompleteStr, Token>,
 );
 
 mod tests {
+    #![allow(unused_imports)]
     use super::*;
 
     #[test]

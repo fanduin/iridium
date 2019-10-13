@@ -1,5 +1,6 @@
 use crate::instruction::Opcode;
 
+#[derive(Default)]
 pub struct VM {
     /// Array that simulates having hardware registers
     pub registers: [i32; 32],
@@ -14,16 +15,6 @@ pub struct VM {
 }
 
 impl VM {
-    pub fn new() -> VM {
-        VM {
-            registers: [0; 32],
-            program: vec![],
-            pc: 0,
-            remainder: 0,
-            equal_flag: false
-        }
-    }
-
     pub fn run(&mut self) {
         let mut is_done = false;
         while !is_done {
@@ -44,14 +35,15 @@ impl VM {
     }
 
     fn execute_instruction(&mut self) -> bool {
-        println!("executing instruction");
+        println!("executing instruction, pc = {}", self.pc);
         if self.pc >= self.program.len() {
             return false
         }
         match self.decode_opcode() {
             Opcode::LOAD => {
                 let register = self.next_8_bits() as usize;
-                let number = self.next_16_bits() as u32;
+                let number = u32::from(self.next_16_bits());
+                println!("loading {} into register {}", number, register);
                 self.registers[register] = number as i32;
             },
             Opcode::ADD => {
@@ -176,23 +168,23 @@ impl VM {
     fn decode_opcode(&mut self) -> Opcode {
         let opcode = Opcode::from(self.program[self.pc]);
         self.pc += 1;
-        return opcode;
+        opcode
     }
 
     fn next_8_bits(&mut self) -> u8 {
         let result = self.program[self.pc];
         self.pc += 1;
-        return result;
+        result
     }
 
     fn next_16_bits(&mut self) -> u16 {
-        let result = ((self.program[self.pc] as u16) << 8) | self.program[self.pc + 1] as u16;
-        self.pc += 1;
-        return result;
+        let result = (u16::from(self.program[self.pc]) << 8) | u16::from(self.program[self.pc + 1]);
+        self.pc += 2;
+        result
     }
 
     pub fn get_test_vm() -> VM {
-        let mut test_vm = VM::new();
+        let mut test_vm = VM::default();
         test_vm.registers[0] = 5;
         test_vm.registers[1] = 10;
         test_vm
@@ -205,13 +197,13 @@ mod tests {
 
     #[test]
     fn test_create_vm() {
-        let test_vm = VM::new();
+        let test_vm = VM::default();
         assert_eq!(test_vm.registers[0], 0);
     }
 
     #[test]
     fn test_hlt_opcode() {
-        let mut test_vm = VM::new();
+        let mut test_vm = VM::default();
         let test_bytes = vec![5, 0, 0, 0];
         test_vm.program = test_bytes;
         test_vm.run_once();
@@ -220,7 +212,7 @@ mod tests {
 
     #[test]
     fn test_igl_opcode() {
-        let mut test_vm = VM::new();
+        let mut test_vm = VM::default();
         let test_bytes = vec![200, 0, 0, 0];
         test_vm.program = test_bytes;
         test_vm.run_once();
