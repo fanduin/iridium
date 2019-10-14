@@ -1,3 +1,5 @@
+use nom::types::CompleteStr;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Opcode {
     LOAD,
@@ -13,8 +15,8 @@ pub enum Opcode {
     NEQ,
     GT,
     LT,
-    GTQ,
-    LTQ,
+    GTE,
+    LTE,
     JMPE,
     NOP,
     IGL,
@@ -49,11 +51,36 @@ impl From<u8> for Opcode {
             10 => Opcode::NEQ,
             11 => Opcode::GT,
             12 => Opcode::LT,
-            13 => Opcode::GTQ,
-            14 => Opcode::LTQ,
+            13 => Opcode::GTE,
+            14 => Opcode::LTE,
             15 => Opcode::JMPE,
             16 => Opcode::NOP,
             _  => Opcode::IGL,
+        }
+    }
+}
+
+impl<'a> From<CompleteStr<'a>> for Opcode {
+    fn from(v: CompleteStr<'a>) -> Self {
+        match v {
+            CompleteStr("load") => Opcode::LOAD,
+            CompleteStr("add") => Opcode::ADD,
+            CompleteStr("sub") => Opcode::SUB,
+            CompleteStr("mul") => Opcode::MUL,
+            CompleteStr("div") => Opcode::DIV,
+            CompleteStr("hlt") => Opcode::HLT,
+            CompleteStr("jmp") => Opcode::JMP,
+            CompleteStr("jmpf") => Opcode::JMPF,
+            CompleteStr("jmpb") => Opcode::JMPB,
+            CompleteStr("eq") => Opcode::EQ,
+            CompleteStr("neq") => Opcode::NEQ,
+            CompleteStr("gte") => Opcode::GTE,
+            CompleteStr("gt") => Opcode::GT,
+            CompleteStr("lte") => Opcode::LTE,
+            CompleteStr("lt") => Opcode::LT,
+            CompleteStr("jmpe") => Opcode::JMPE,
+            CompleteStr("nop") => Opcode::NOP,
+            _ => Opcode::IGL,
         }
     }
 }
@@ -72,5 +99,13 @@ mod tests {
     fn test_create_instruction() {
         let instruction = Instruction::new(Opcode::HLT);
         assert_eq!(instruction.opcode, Opcode::HLT);
+    }
+
+    #[test]
+    fn test_str_to_opcode() {
+        let opcode = Opcode::from(CompleteStr("load"));
+        assert_eq!(opcode, Opcode::LOAD);
+        let opcode = Opcode::from(CompleteStr("illegal"));
+        assert_eq!(opcode, Opcode::IGL);
     }
 }

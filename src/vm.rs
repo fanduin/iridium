@@ -123,7 +123,7 @@ impl VM {
                 }
                 self.next_8_bits();
             },
-            Opcode::GTQ => {
+            Opcode::GTE => {
                 let register1 = self.registers[self.next_8_bits() as usize];
                 let register2 = self.registers[self.next_8_bits() as usize];
                 if register1 >= register2 {
@@ -133,7 +133,7 @@ impl VM {
                 }
                 self.next_8_bits();
             },
-            Opcode::LTQ => {
+            Opcode::LTE => {
                 let register1 = self.registers[self.next_8_bits() as usize];
                 let register2 = self.registers[self.next_8_bits() as usize];
                 if register1 <= register2 {
@@ -313,7 +313,7 @@ mod tests {
     }
 
     #[test]
-    fn test_gtq_opcode() {
+    fn test_gte_opcode() {
         let mut test_vm = VM::get_test_vm();
         test_vm.registers[0] = 10;
         test_vm.registers[1] = 0;
@@ -329,7 +329,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ltq_opcode() {
+    fn test_lte_opcode() {
         let mut test_vm = VM::get_test_vm();
         test_vm.registers[0] = 10;
         test_vm.registers[1] = 0;
