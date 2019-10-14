@@ -2,6 +2,7 @@ use nom::types::CompleteStr;
 use nom::digit;
 
 use crate::assembler::Token;
+use crate::assembler::register_parsers::register;
 
 named!(pub integer_operand<CompleteStr, Token>,
     ws!(
@@ -12,6 +13,13 @@ named!(pub integer_operand<CompleteStr, Token>,
                 Token::IntegerOperand{value: reg_num.parse::<i32>().unwrap()}
             )
         )
+    )
+);
+
+named!(pub operand<CompleteStr, Token>,
+    alt!(
+        integer_operand |
+        register
     )
 );
 

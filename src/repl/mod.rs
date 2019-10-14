@@ -1,6 +1,9 @@
+use nom::types::CompleteStr;
 use std;
 use std::io;
-use std::io::Write;
+use std::io::{Read, Write};
+use std::fs::File;
+use std::path::Path;
 use std::num::ParseIntError;
 
 use crate::vm::VM;
@@ -53,6 +56,31 @@ impl REPL {
                     println!("{:#?}", self.vm.registers);
                     println!("End of Register Listing");
                 },
+                ".clear" => {
+                    self.vm.program.clear();
+                    println!("Clearing program vector");
+                },
+                ".load_file" => {
+                    print!("Please enter the path of the file you wish to load: ");
+                    io::stdout().flush().expect("Unable to flush stdout");
+                    let mut tmp = String::new();
+                    stdin.read_line(&mut tmp).expect("Unable to read line from user");
+                    let tmp = tmp.trim();
+                    let filename = Path::new(&tmp);
+                    let mut f = File::open(Path::new(&filename)).expect("File not found");
+                    let mut contents = String::new();
+                    f.read_to_string(&mut contents).expect("There was an error reading from the file");
+                    let program = match program(CompleteStr(&contents)) {
+                        Ok((remainder, program)) => {
+                            program
+                        },
+                        Err(e) => {
+                            println!("Unable to parse input: {:?}", e);
+                            continue;
+                        }
+                    };
+                    self.vm.program.append(&mut program.to_bytes());
+                }
                 _ => {
                     let program = match program(buffer.into()) {
                         Ok((_, program)) => program,

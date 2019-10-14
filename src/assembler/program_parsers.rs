@@ -1,6 +1,7 @@
 use nom::types::CompleteStr;
 
 use crate::assembler::instruction_parsers::{AssemblerInstruction, instruction};
+use crate::assembler::directive_parsers::directive;
 
 #[derive(Debug, PartialEq)]
 pub struct Program {
@@ -46,7 +47,9 @@ mod tests {
 
     #[test]
     fn test_program_to_bytes() {
+        println!("before program");
         let results = program(CompleteStr("load $0 #100\n"));
+        println!("after program");
         assert_eq!(results.is_ok(), true);
         let (_, program) = results.unwrap();
         let bytecode = program.to_bytes();
