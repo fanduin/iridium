@@ -48,7 +48,7 @@ named!(pub directive<CompleteStr, AssemblerInstruction>,
     )
 );
 
-#[cfg(tests)]
+#[cfg(test)]
 mod tests {
     #![allow(unused_imports)]
     use super::*;
@@ -57,7 +57,7 @@ mod tests {
     fn test_parser_directive() {
         let result = directive_declaration(CompleteStr(".data"));
         assert_eq!(result.is_ok(), true);
-        let (_, directive) = result.is_ok();
+        let (_, directive) = result.unwrap();
         assert_eq!(directive, Token::Directive { name: "data".to_string() })
     }
 }

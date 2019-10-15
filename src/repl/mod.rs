@@ -1,4 +1,3 @@
-use nom::types::CompleteStr;
 use std;
 use std::io;
 use std::io::{Read, Write};
@@ -8,13 +7,15 @@ use std::num::ParseIntError;
 
 use crate::vm::VM;
 use crate::assembler::program_parsers::{program};
+use crate::assembler::Assembler;
 
 /// Core structure for the REPL for the assembler
 #[derive(Default)]
 pub struct REPL {
     command_buffer: Vec<String>,
     // The vm the REPL will use to execute code
-    vm: VM
+    vm: VM,
+    asm: Assembler
 }
 
 impl REPL {
@@ -70,16 +71,18 @@ impl REPL {
                     let mut f = File::open(Path::new(&filename)).expect("File not found");
                     let mut contents = String::new();
                     f.read_to_string(&mut contents).expect("There was an error reading from the file");
-                    let program = match program(CompleteStr(&contents)) {
-                        Ok((remainder, program)) => {
-                            program
+                    match self.asm.assemble(&contents) {
+                        Some(mut assembled_program) => {
+                            println!("Sending assembled program to VM");
+                            self.vm.program.append(&mut assembled_program);
+                            println!("{:#?}", self.vm.program);
+                            self.vm.run();
                         },
-                        Err(e) => {
-                            println!("Unable to parse input: {:?}", e);
-                            continue;
+                        None => {
+                            println!("Unable to parse input");
+                            continue
                         }
-                    };
-                    self.vm.program.append(&mut program.to_bytes());
+                    }
                 }
                 _ => {
                     let program = match program(buffer.into()) {
@@ -89,7 +92,7 @@ impl REPL {
                             continue;
                         }
                     };
-                    self.vm.program.append(&mut program.to_bytes());
+                    self.vm.program.append(&mut program.to_bytes(&self.asm.symbols));
                     self.vm.run_once();
                 }
             };

@@ -3,6 +3,7 @@ use nom::digit;
 
 use crate::assembler::Token;
 use crate::assembler::register_parsers::register;
+use crate::assembler::label_parsers::label_usage;
 
 named!(pub integer_operand<CompleteStr, Token>,
     ws!(
@@ -19,6 +20,7 @@ named!(pub integer_operand<CompleteStr, Token>,
 named!(pub operand<CompleteStr, Token>,
     alt!(
         integer_operand |
+        label_usage |
         register
     )
 );

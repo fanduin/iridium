@@ -4,6 +4,7 @@ use crate::assembler::Token;
 use crate::assembler::opcode_parsers::*;
 use crate::assembler::operand_parsers::operand;
 use crate::assembler::label_parsers::label_declaration;
+use crate::assembler::SymbolTable;
 
 #[derive(Debug, PartialEq)]
 pub struct AssemblerInstruction {
@@ -47,7 +48,7 @@ named!(instruction_combined<CompleteStr, AssemblerInstruction>,
 );
 
 impl AssemblerInstruction {
-    pub fn to_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self, symbols: &SymbolTable) -> Vec<u8> {
         let mut results = vec![];
         match self.opcode {
             Some(ref token) => {
@@ -68,7 +69,7 @@ impl AssemblerInstruction {
 
         for operand in &[&self.operand1, &self.operand2, &self.operand3] {
             if let Some(token) = operand {
-                AssemblerInstruction::extract_operand(token, &mut results)
+                AssemblerInstruction::extract_operand(token, &mut results, symbols)
             }
         }
 
@@ -79,7 +80,35 @@ impl AssemblerInstruction {
         results
     }
 
-    fn extract_operand(t: &Token, results: &mut Vec<u8>) {
+    pub fn is_label(&self) -> bool {
+        self.label.is_some()
+    }
+
+    pub fn is_opcode(&self) -> bool {
+        self.opcode.is_some()
+    }
+
+    pub fn is_directive(&self) -> bool {
+        self.directive.is_some()
+    }
+
+    pub fn label_name(&self) -> Option<String> {
+        match &self.label {
+            Some(l) => {
+                match l {
+                    Token::LabelDeclaration{ name } => {
+                        Some(name.clone())
+                    },
+                    _ => None
+                }
+            },
+            None => {
+                None
+            }
+        }
+    }
+
+    fn extract_operand(t: &Token, results: &mut Vec<u8>, symbols: &SymbolTable) {
         match t {
             Token::Register { reg_num } => {
                 results.push(*reg_num);
@@ -91,6 +120,17 @@ impl AssemblerInstruction {
                 results.push(byte2 as u8);
                 results.push(byte1 as u8);
             },
+            Token::LabelUsage { name } => {
+                match symbols.symbol_value(name) {
+                    Some(value) => {
+                        let byte1 = value;
+                        let byte2 = value >> 8;
+                        results.push(byte2 as u8);
+                        results.push(byte1 as u8);
+                    },
+                    None => {}
+                }
+            }
             _ => {
                 println!("Opcode found in operand field");
                 std::process::exit(1);
