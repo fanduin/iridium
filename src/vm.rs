@@ -1,3 +1,4 @@
+use crate::assembler::{PIE_HEADER_LENGTH, PIE_HEADER_PREFIX};
 use crate::instruction::Opcode;
 
 #[derive(Default)]
@@ -18,6 +19,11 @@ pub struct VM {
 
 impl VM {
     pub fn run(&mut self) {
+        if !self.verify_header() {
+            println!("Header was incorrect");
+            std::process::exit(1);
+        }
+        self.pc = 65;
         let mut is_done = false;
         while !is_done {
             is_done = self.execute_instruction();
@@ -66,7 +72,7 @@ impl VM {
             Opcode::DIV => {
                 let register1 = self.registers[self.next_8_bits() as usize];
                 let register2 = self.registers[self.next_8_bits() as usize];
-                self.registers[self.next_8_bits() as usize] = register1 * register2;
+                self.registers[self.next_8_bits() as usize] = register1 / register2;
                 self.remainder = (register1 % register2) as u32;
             },
             Opcode::HLT => {
@@ -209,11 +215,30 @@ impl VM {
         test_vm.registers[1] = 10;
         test_vm
     }
+
+    fn verify_header(&self) -> bool {
+        if self.program[0..4] != PIE_HEADER_PREFIX {
+            return false
+        }
+        true
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn prepend_header(mut b: Vec<u8>) -> Vec<u8> {
+        let mut prepension = vec![];
+        for byte in PIE_HEADER_PREFIX.into_iter() {
+            prepension.push(byte.clone());
+        }
+        while prepension.len() <= PIE_HEADER_LENGTH {
+            prepension.push(0);
+        }
+        prepension.append(&mut b);
+        prepension
+    }
 
     #[test]
     fn test_create_vm() {
@@ -243,8 +268,45 @@ mod tests {
     fn test_load_opcode() {
         let mut test_vm = VM::get_test_vm();
         test_vm.program = vec![0, 0, 1, 244];
+        test_vm.program = prepend_header(test_vm.program);
         test_vm.run();
         assert_eq!(test_vm.registers[0], 500);
+    }
+
+    #[test]
+    fn test_add_opcode() {
+        let mut test_vm = VM::get_test_vm();
+        test_vm.program = vec![1, 0, 1, 2];
+        test_vm.program = prepend_header(test_vm.program);
+        test_vm.run();
+        assert_eq!(test_vm.registers[2], 15);
+    }
+   
+    #[test]
+    fn test_sub_opcode() {
+        let mut test_vm = VM::get_test_vm();
+        test_vm.program = vec![2, 1, 0, 2];
+        test_vm.program = prepend_header(test_vm.program);
+        test_vm.run();
+        assert_eq!(test_vm.registers[2], 5);
+    }
+   
+    #[test]
+    fn test_mul_opcode() {
+        let mut test_vm = VM::get_test_vm();
+        test_vm.program = vec![3, 0, 1, 2];
+        test_vm.program = prepend_header(test_vm.program);
+        test_vm.run();
+        assert_eq!(test_vm.registers[2], 50);
+    }
+   
+    #[test]
+    fn test_div_opcode() {
+        let mut test_vm = VM::get_test_vm();
+        test_vm.program = vec![4, 1, 0, 2];
+        test_vm.program = prepend_header(test_vm.program);
+        test_vm.run();
+        assert_eq!(test_vm.registers[2], 2);
     }
    
     #[test]
