@@ -1,5 +1,5 @@
-use crate::assembler::{PIE_HEADER_LENGTH, PIE_HEADER_PREFIX};
 use crate::instruction::Opcode;
+use crate::assembler::PIE_HEADER_PREFIX;
 
 #[derive(Default)]
 pub struct VM {
@@ -14,7 +14,9 @@ pub struct VM {
     /// Contains the remainder of modulo division ops
     remainder: u32,
     /// Contains the result of the last comparison operation
-    equal_flag: bool
+    equal_flag: bool,
+    /// Contains the read only section data
+    ro_data: Vec<u8>
 }
 
 impl VM {
@@ -183,6 +185,30 @@ impl VM {
                 self.next_8_bits();
                 self.next_8_bits();
             },
+            Opcode::DJMPE => {
+                let destination = self.next_16_bits();
+                if self.equal_flag {
+                    self.pc = destination as usize;
+                    self.next_8_bits();
+                } else {
+                    self.next_8_bits();
+                }
+            }
+            Opcode::PRTS => {
+                let starting_offset = self.next_16_bits() as usize;
+                let mut ending_offset = starting_offset;
+                let slice = self.ro_data.as_slice();
+
+                while slice[ending_offset] != 0 {
+                    ending_offset += 1;
+                }
+
+                let result = std::str::from_utf8(&slice[starting_offset..ending_offset]);
+                match result {
+                    Ok(s) => { print!("{}", s); },
+                    Err(e) => { print!("Error decoding string for prts instruction: {:#?}", e); }
+                }
+            }
             Opcode::IGL => {
                 println!("Unrecognized opcode found! Terminating!");
                 return true;
@@ -227,6 +253,7 @@ impl VM {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::assembler::PIE_HEADER_LENGTH;
 
     fn prepend_header(mut b: Vec<u8>) -> Vec<u8> {
         let mut prepension = vec![];
@@ -443,5 +470,13 @@ mod tests {
         test_vm.program = vec![17, 0, 0, 0];
         test_vm.run_once();
         assert_eq!(test_vm.heap.len(), 1024);
+    }
+
+    #[test]
+    fn test_prts_opcode() {
+        let mut test_vm = VM::get_test_vm();
+        test_vm.ro_data.append(&mut vec![72, 101, 108, 108, 111, 0]);
+        test_vm.program = vec![21, 0, 0, 0];
+        test_vm.run_once();
     }
 }
